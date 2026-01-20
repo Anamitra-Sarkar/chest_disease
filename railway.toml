@@ -1,0 +1,24 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+[[services]]
+type = "web"
+name = "backend"
+plan = "starter"
+envVars = ["GROQ_API_KEY", "MODEL_PATH", "INFERENCE_DEVICE", "PORT"]
+
+[phases.setup]
+nixPkgs = ["python310", "ffmpeg"]
+
+[phases.build]
+cmds = ["pip install --upgrade pip", "pip install -r requirements.txt"]
+
+[start]
+cmd = "python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
