@@ -38,7 +38,7 @@ function RobotNurse({ delay }: { delay: number }) {
 
         return { x: newX, y: newY }
       })
-    }, 50)
+    }, 100) // Increased from 50ms to 100ms for better performance
 
     return () => clearInterval(interval)
   }, [])
@@ -200,26 +200,9 @@ export default function AssistantPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-accent-100 via-medical-100 to-accent-200 flex flex-col relative overflow-hidden">
       {/* Floating Robot Nurses - 20 robots */}
-      <RobotNurse delay={0} />
-      <RobotNurse delay={0.3} />
-      <RobotNurse delay={0.6} />
-      <RobotNurse delay={0.9} />
-      <RobotNurse delay={1.2} />
-      <RobotNurse delay={1.5} />
-      <RobotNurse delay={1.8} />
-      <RobotNurse delay={2.1} />
-      <RobotNurse delay={2.4} />
-      <RobotNurse delay={2.7} />
-      <RobotNurse delay={3.0} />
-      <RobotNurse delay={3.3} />
-      <RobotNurse delay={3.6} />
-      <RobotNurse delay={3.9} />
-      <RobotNurse delay={4.2} />
-      <RobotNurse delay={4.5} />
-      <RobotNurse delay={4.8} />
-      <RobotNurse delay={5.1} />
-      <RobotNurse delay={5.4} />
-      <RobotNurse delay={5.7} />
+      {Array.from({ length: 20 }).map((_, index) => (
+        <RobotNurse key={index} delay={index * 0.3} />
+      ))}
 
       <div className="relative z-10">
         <header className="bg-white/90 backdrop-blur-md border-b border-accent-200 px-4 py-4 shadow-glow-sm">

@@ -75,7 +75,7 @@ export default function Home() {
       <FloatingIcon icon={Radio} delay={5} />
       <FloatingIcon icon={Shield} delay={5.5} />
       <FloatingIcon icon={Zap} delay={6} />
-      <FloatingIcon icon={Activity} delay={6.5} />
+      <FloatingIcon icon={Heart} delay={6.5} />
       
       <div className="container mx-auto px-4 py-16 relative z-10">
         <div className="max-w-4xl mx-auto">
