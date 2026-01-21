@@ -1,0 +1,17 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Medical cross background -->
+  <rect width="64" height="64" rx="12" fill="#2563eb"/>
+  
+  <!-- Chest/Lung icon -->
+  <path d="M32 12C32 12 28 15 24 20C20 25 18 30 18 36C18 42 20 48 24 52C28 56 32 58 32 58C32 58 36 56 40 52C44 48 46 42 46 36C46 30 44 25 40 20C36 15 32 12 32 12Z" stroke="white" stroke-width="2" fill="none"/>
+  
+  <!-- Heart line -->
+  <path d="M32 24V45" stroke="white" stroke-width="2"/>
+  <circle cx="32" cy="34" r="4" fill="white"/>
+  
+  <!-- Left lung -->
+  <ellipse cx="24" cy="34" rx="4" ry="8" fill="white" opacity="0.6"/>
+  
+  <!-- Right lung -->
+  <ellipse cx="40" cy="34" rx="4" ry="8" fill="white" opacity="0.6"/>
+</svg>

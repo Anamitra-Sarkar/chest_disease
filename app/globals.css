@@ -34,6 +34,41 @@ a {
   text-decoration: none;
 }
 
+/* Glowing button animation */
+.glow-button {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.glow-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.glow-button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(37, 99, 235, 0.5), 0 0 30px rgba(37, 99, 235, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(37, 99, 235, 0.8), 0 0 40px rgba(37, 99, 235, 0.5);
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

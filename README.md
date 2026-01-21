@@ -10,15 +10,15 @@ A production-ready, medical-grade AI assistant for chest X-ray analysis. Built w
 
 The application consists of two components:
 
-1. **Frontend**: Next.js 14 (deployed to Vercel)
-2. **Backend**: FastAPI with PyTorch (deployed separately)
+1. **Frontend**: Next.js 14 (can be deployed to Vercel or other platforms)
+2. **Backend**: FastAPI with PyTorch (deployed to Hugging Face Spaces)
 
 ### Why This Architecture?
 
-Vercel's serverless functions run on Node.js and do not support Python/PyTorch natively. To ensure production reliability:
-- The frontend runs on Vercel for optimal performance
-- The Python backend runs on a platform that supports PyTorch (Railway, Render, AWS, etc.)
+- The backend runs on Hugging Face Spaces with Docker support for PyTorch
 - Clean separation ensures each component runs on the optimal infrastructure
+- Automatic model downloading from Hugging Face Hub
+- CI/CD via GitHub Actions for seamless updates
 
 ## Tech Stack
 
@@ -154,84 +154,85 @@ Frontend will be available at: `http://localhost:3000`
 
 ## Deployment
 
-### Deploying Frontend to Vercel
+### Deploying to Hugging Face Spaces (Recommended)
 
-1. **Install Vercel CLI:**
+This repository is automatically synced to Hugging Face Spaces via GitHub Actions.
+
+**Live Space**: https://huggingface.co/spaces/Arko007/chest-disease
+
+#### Automatic Deployment
+
+1. **Push to main branch** - GitHub Actions automatically syncs to Hugging Face
+2. **Model is downloaded automatically** during Docker build from `Arko007/chexpert-cnn-from-scratch`
+3. **No manual steps required** - just push your code!
+
+#### Setup Instructions
+
+1. **Add HF_TOKEN to GitHub Secrets:**
+   - Go to your GitHub repository settings
+   - Navigate to Secrets and Variables > Actions
+   - Add a new secret named `HF_TOKEN`
+   - Value should be your Hugging Face write token from https://huggingface.co/settings/tokens
+
+2. **Configure Environment Variables in Hugging Face Space:**
+   - Go to https://huggingface.co/spaces/Arko007/chest-disease/settings
+   - Add the following secret:
+     - `GROQ_API_KEY`: Your Groq API key for LLM interpretation
+
+3. **Push to main branch:**
    ```bash
-   npm install -g vercel
+   git add .
+   git commit -m "Your changes"
+   git push origin main
    ```
 
-2. **Build the Project:**
+The GitHub Actions workflow will automatically:
+- Clone your repository
+- Push to Hugging Face Space
+- Trigger a rebuild
+- Deploy the updated backend
+
+#### Manual Deployment to Hugging Face Spaces
+
+If you need to deploy manually:
+
+1. **Install Hugging Face CLI:**
    ```bash
-   npm run build
+   pip install huggingface_hub
+   huggingface-cli login
    ```
 
-3. **Deploy:**
+2. **Clone the Space repository:**
    ```bash
-   vercel
+   git clone https://huggingface.co/spaces/Arko007/chest-disease
+   cd chest-disease
    ```
 
-4. **Set Environment Variables in Vercel:**
-   - `NEXT_PUBLIC_API_URL`: Your deployed backend URL (e.g., `https://your-backend.railway.app`)
-
-5. **Verify Deployment:**
+3. **Copy your files:**
    ```bash
-   vercel --prod
+   cp -r /path/to/your/repo/* .
    ```
 
-### Deploying Backend to Railway (Recommended)
-
-1. **Create Railway Account:**
-   Visit https://railway.app/
-
-2. **Initialize Railway Project:**
+4. **Push to Hugging Face:**
    ```bash
-   npm install -g @railway/cli
-   railway login
-   railway init
+   git add .
+   git commit -m "Update space"
+   git push
    ```
 
-3. **Add Python Service:**
-   ```bash
-   railway add
-   # Select Python
-   ```
+#### Docker Deployment
 
-4. **Upload Model File:**
-   - In Railway dashboard, add the `epoch_001_mAUROC_0.486525.pth` file as a volume
-   - Or host it on a CDN and set `MODEL_PATH` to the URL
+The backend uses Docker for deployment. The Dockerfile:
+- Installs all dependencies
+- Downloads the model from Hugging Face Hub
+- Exposes port 7860 (HF Spaces default)
+- Runs the FastAPI backend with uvicorn
 
-5. **Set Environment Variables:**
-   ```bash
-   railway variables set GROQ_API_KEY=your_key
-   railway variables set MODEL_PATH=/app/epoch_001_mAUROC_0.486525.pth
-   railway variables set INFERENCE_DEVICE=cpu
-   railway variables set PORT=8000
-   ```
-
-6. **Deploy:**
-   ```bash
-   railway up
-   ```
-
-### Alternative Backend Deployments
-
-**Render:**
-- Create a new Web Service
-- Connect your GitHub repository
-- Set build command: `pip install -r requirements.txt`
-- Set start command: `python backend/main.py`
-- Add environment variables
-
-**AWS Lambda (with Docker):**
-- Package the backend in a Docker container
-- Deploy to AWS Lambda using Docker image support
-- Requires proper PyTorch installation in container
-
-**Google Cloud Run:**
-- Create a Dockerfile for the backend
-- Build and push to Google Container Registry
-- Deploy to Cloud Run
+To test Docker locally:
+```bash
+docker build -t chest-disease .
+docker run -p 7860:7860 -e GROQ_API_KEY=your_key chest-disease
+```
 
 ## API Reference
 
