@@ -5,6 +5,11 @@ export const metadata: Metadata = {
   title: 'Chest X-Ray Assistant | Medical AI',
   description: 'AI-powered chest X-ray analysis assistant for educational purposes. Not a diagnostic tool.',
   keywords: ['chest X-ray', 'medical AI', 'chexpert', 'radiology assistant'],
+  icons: {
+    icon: '/logo.svg',
+    shortcut: '/logo.svg',
+    apple: '/logo.svg',
+  },
 }
 
 export default function RootLayout({
@@ -14,6 +19,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+      </head>
       <body>{children}</body>
     </html>
   )
