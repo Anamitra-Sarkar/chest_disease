@@ -1,9 +1,70 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Send, Image as ImageIcon, AlertCircle, Activity, ChevronLeft } from 'lucide-react'
+import { Send, Image as ImageIcon, AlertCircle, Activity, ChevronLeft, Bot } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+
+// Robot Nurse component for floating animation
+function RobotNurse({ delay }: { delay: number }) {
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const velocityRef = useRef({ 
+    x: (Math.random() - 0.5) * 0.4, 
+    y: (Math.random() - 0.5) * 0.4 
+  })
+
+  useEffect(() => {
+    // Initialize random position
+    setPosition({
+      x: Math.random() * 90 + 5,
+      y: Math.random() * 90 + 5
+    })
+
+    const interval = setInterval(() => {
+      setPosition(prev => {
+        const velocity = velocityRef.current
+        let newX = prev.x + velocity.x
+        let newY = prev.y + velocity.y
+
+        // Bounce off edges with smoother motion
+        if (newX < 3 || newX > 97) {
+          velocity.x = -velocity.x
+          newX = newX < 3 ? 3 : 97
+        }
+        if (newY < 3 || newY > 97) {
+          velocity.y = -velocity.y
+          newY = newY < 3 ? 3 : 97
+        }
+
+        return { x: newX, y: newY }
+      })
+    }, 100) // Increased from 50ms to 100ms for better performance
+
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div 
+      className="absolute transition-all duration-100 ease-linear pointer-events-none z-0"
+      style={{ 
+        left: `${position.x}%`, 
+        top: `${position.y}%`,
+        animationDelay: `${delay}s`
+      }}
+    >
+      <div className="relative">
+        <Bot className="w-6 h-6 md:w-8 md:h-8 text-accent-300 opacity-15 animate-pulse" 
+             style={{ animationDuration: '3s' }} />
+        {/* Nurse cap */}
+        <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-2 md:w-4 md:h-3 bg-white opacity-15 rounded-t-lg" 
+             style={{ 
+               clipPath: 'polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)',
+             }} 
+        />
+      </div>
+    </div>
+  )
+}
 
 interface Message {
   role: 'user' | 'assistant'
@@ -24,7 +85,6 @@ export default function AssistantPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
-  const [videoError, setVideoError] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -67,10 +127,6 @@ export default function AssistantPage() {
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
-  }
-
-  const handleVideoError = () => {
-    setVideoError(true)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -142,39 +198,27 @@ export default function AssistantPage() {
   }
 
   return (
-    <div className="min-h-screen bg-medical-50 flex flex-col relative">
-      {/* Background Video */}
-      <div className="fixed inset-0 z-0">
-        {!videoError ? (
-          <video
-            src="/video4.mp4"
-            autoPlay
-            loop
-            muted
-            playsInline
-            onError={handleVideoError}
-            className="w-full h-full object-cover opacity-20"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-medical-50 to-accent-50" />
-        )}
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-accent-100 via-medical-100 to-accent-200 flex flex-col relative overflow-hidden">
+      {/* Floating Robot Nurses - 20 robots */}
+      {Array.from({ length: 20 }).map((_, index) => (
+        <RobotNurse key={index} delay={index * 0.3} />
+      ))}
 
       <div className="relative z-10">
-        <header className="bg-white/80 backdrop-blur-md border-b border-medical-200 px-4 py-4">
+        <header className="bg-white/90 backdrop-blur-md border-b border-accent-200 px-4 py-4 shadow-glow-sm">
           <div className="container mx-auto max-w-4xl">
             <div className="flex items-center gap-4">
               <Link
                 href="/"
-                className="p-2 hover:bg-medical-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-accent-100 rounded-lg transition-colors"
               >
-                <ChevronLeft className="w-5 h-5 text-medical-600" />
+                <ChevronLeft className="w-5 h-5 text-accent-700" />
               </Link>
               <div className="flex items-center gap-3">
-                <Activity className="w-6 h-6 text-accent-600" />
+                <Activity className="w-6 h-6 text-accent-600 animate-pulse" />
                 <div>
                   <h1 className="font-semibold text-medical-900">Chest X-Ray Assistant</h1>
-                  <p className="text-xs text-medical-500">Educational Analysis Tool</p>
+                  <p className="text-xs text-accent-600">Educational Analysis Tool</p>
                 </div>
               </div>
             </div>
@@ -182,7 +226,7 @@ export default function AssistantPage() {
         </header>
 
         <main className="flex-1 container mx-auto max-w-4xl px-4 py-6">
-          <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-medical flex flex-col h-[calc(100vh-200px)] min-h-[500px]">
+          <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-glow-lg flex flex-col h-[calc(100vh-200px)] min-h-[500px] border border-accent-200/50">
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {messages.map((message, index) => (
               <div
@@ -192,10 +236,10 @@ export default function AssistantPage() {
                 }`}
               >
                 <div
-                  className={`max-w-[80%] rounded-2xl p-4 ${
+                  className={`max-w-[80%] rounded-2xl p-4 shadow-glow-sm ${
                     message.role === 'user'
-                      ? 'bg-accent-600 text-white'
-                      : 'bg-medical-100 text-medical-900'
+                      ? 'bg-gradient-to-br from-accent-600 to-accent-700 text-white'
+                      : 'bg-gradient-to-br from-medical-100 to-accent-50 text-medical-900'
                   }`}
                 >
                   {message.imageUrl && (
@@ -262,7 +306,7 @@ export default function AssistantPage() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="border-t border-medical-200 p-4 bg-white/70 backdrop-blur-md rounded-b-2xl">
+          <div className="border-t border-accent-200 p-4 bg-white/80 backdrop-blur-md rounded-b-2xl">
             <form onSubmit={handleSubmit} className="space-y-3">
               {uploadedImage && (
                 <div className="relative inline-block">
@@ -288,10 +332,10 @@ export default function AssistantPage() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-3 bg-white border border-medical-300 rounded-lg hover:bg-medical-100 transition-colors flex-shrink-0"
+                  className="p-3 bg-white border-2 border-accent-300 rounded-lg hover:bg-accent-50 hover:border-accent-400 transition-all duration-200 flex-shrink-0 shadow-glow-sm"
                   disabled={isLoading}
                 >
-                  <ImageIcon className="w-5 h-5 text-medical-600" />
+                  <ImageIcon className="w-5 h-5 text-accent-600" />
                 </button>
                 <input
                   ref={fileInputRef}
@@ -307,14 +351,14 @@ export default function AssistantPage() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Type your message or upload an X-ray..."
-                  className="flex-1 px-4 py-3 bg-white border border-medical-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent disabled:opacity-50"
+                  className="flex-1 px-4 py-3 bg-white border-2 border-accent-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 disabled:opacity-50 transition-all duration-200"
                   disabled={isLoading}
                 />
 
                 <button
                   type="submit"
                   disabled={isLoading || (!input.trim() && !uploadedImage)}
-                  className="p-3 bg-accent-600 hover:bg-accent-700 disabled:bg-medical-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex-shrink-0"
+                  className="p-3 bg-gradient-to-r from-accent-600 to-accent-700 hover:from-accent-700 hover:to-accent-800 disabled:from-medical-300 disabled:to-medical-400 disabled:cursor-not-allowed text-white rounded-lg transition-all duration-200 flex-shrink-0 shadow-glow-sm hover:shadow-glow"
                 >
                   <Send className="w-5 h-5" />
                 </button>
@@ -323,7 +367,7 @@ export default function AssistantPage() {
           </div>
         </div>
 
-        <div className="mt-4 bg-amber-50/80 backdrop-blur-md border border-amber-200 rounded-lg p-4">
+        <div className="mt-4 bg-amber-50/90 backdrop-blur-md border-2 border-amber-300 rounded-lg p-4 shadow-glow-sm">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
             <div>

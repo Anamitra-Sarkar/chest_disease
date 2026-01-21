@@ -34,6 +34,11 @@ const config: Config = {
       boxShadow: {
         'medical': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
         'medical-lg': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        'medical-glow': '0 4px 16px rgba(37, 99, 235, 0.2), 0 8px 32px rgba(37, 99, 235, 0.15)',
+        'glow-sm': '0 2px 8px rgba(37, 99, 235, 0.15), 0 4px 16px rgba(37, 99, 235, 0.1)',
+        'glow': '0 4px 16px rgba(37, 99, 235, 0.2), 0 8px 32px rgba(37, 99, 235, 0.15)',
+        'glow-lg': '0 8px 24px rgba(37, 99, 235, 0.25), 0 12px 48px rgba(37, 99, 235, 0.2)',
+        'glow-xl': '0 12px 32px rgba(37, 99, 235, 0.3), 0 16px 64px rgba(37, 99, 235, 0.25)',
       },
     },
   },
