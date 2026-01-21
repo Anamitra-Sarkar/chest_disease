@@ -8,10 +8,15 @@ import { Activity, Shield, Info, ChevronDown, Heart, Zap, Brain } from 'lucide-r
 export default function Home() {
   const [currentVideo, setCurrentVideo] = useState(0)
   const [showAbout, setShowAbout] = useState(false)
+  const [videoError, setVideoError] = useState(false)
   const videos = ['/video1.mp4', '/video2.mp4', '/video3.mp4']
 
   const handleVideoEnd = () => {
     setCurrentVideo((prev) => (prev + 1) % videos.length)
+  }
+
+  const handleVideoError = () => {
+    setVideoError(true)
   }
 
   return (
@@ -32,29 +37,44 @@ export default function Home() {
 
           {/* Video Loop Section */}
           <div className="bg-white rounded-2xl shadow-medical-lg overflow-hidden mb-12">
-            <div className="relative w-full h-96">
-              <video
-                key={currentVideo}
-                src={videos[currentVideo]}
-                autoPlay
-                muted
-                playsInline
-                onEnded={handleVideoEnd}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute bottom-4 right-4 flex gap-2">
-                {videos.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentVideo(index)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      index === currentVideo ? 'bg-accent-600 w-8' : 'bg-white/50'
-                    }`}
-                    aria-label={`Go to video ${index + 1}`}
-                  />
-                ))}
+            {!videoError ? (
+              <div className="relative w-full h-96">
+                <video
+                  key={currentVideo}
+                  src={videos[currentVideo]}
+                  autoPlay
+                  muted
+                  playsInline
+                  onEnded={handleVideoEnd}
+                  onError={handleVideoError}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute bottom-4 right-4 flex gap-2">
+                  {videos.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentVideo(index)}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        index === currentVideo ? 'bg-accent-600 w-8' : 'bg-white/50'
+                      }`}
+                      aria-label={`Go to video ${index + 1}`}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="relative w-full h-96 bg-gradient-to-br from-accent-50 to-medical-100 flex items-center justify-center">
+                <div className="text-center p-8">
+                  <Activity className="w-16 h-16 text-accent-600 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-medical-900 mb-2">
+                    AI-Powered Chest X-Ray Analysis
+                  </h3>
+                  <p className="text-medical-600">
+                    Advanced deep learning for medical imaging insights
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="bg-white rounded-2xl shadow-medical-lg p-8 mb-12">

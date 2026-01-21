@@ -38,6 +38,8 @@ a {
 .glow-button {
   position: relative;
   overflow: hidden;
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
+  animation: glow-pulse 2s ease-in-out infinite;
 }
 
 .glow-button::before {
@@ -56,11 +58,6 @@ a {
 .glow-button:hover::before {
   width: 300px;
   height: 300px;
-}
-
-.glow-button {
-  box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
-  animation: glow-pulse 2s ease-in-out infinite;
 }
 
 @keyframes glow-pulse {
