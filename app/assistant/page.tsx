@@ -28,6 +28,9 @@ export default function AssistantPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  // Regex for bold text parsing (compiled once)
+  const boldRegex = /\*\*(.*?)\*\*/g
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -227,7 +230,6 @@ export default function AssistantPage() {
                   <div className="whitespace-pre-wrap text-sm leading-relaxed">
                     {message.content.split('\n').map((line, idx) => {
                       // Handle bold text
-                      const boldRegex = /\*\*(.*?)\*\*/g
                       const parts = line.split(boldRegex)
                       
                       return (
