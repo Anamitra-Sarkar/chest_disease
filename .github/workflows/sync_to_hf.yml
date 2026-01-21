@@ -1,0 +1,64 @@
+name: Sync to Hugging Face Space
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+      
+      - name: Setup Git LFS
+        run: |
+          git lfs install
+      
+      - name: Configure Git
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "GitHub Actions Bot"
+      
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          # Validate HF_TOKEN exists
+          if [ -z "$HF_TOKEN" ]; then
+            echo "Error: HF_TOKEN is not set in GitHub Secrets"
+            echo "Please add your Hugging Face token to GitHub Actions Secrets"
+            exit 1
+          fi
+          
+          # Configure git to use the token
+          git config --global credential.helper store
+          echo "https://user:${HF_TOKEN}@huggingface.co" > ~/.git-credentials
+          
+          # Add Hugging Face remote if it doesn't exist
+          if ! git remote get-url huggingface 2>/dev/null; then
+            git remote add huggingface https://huggingface.co/spaces/Arko007/chest-disease
+          fi
+          
+          # Push to Hugging Face
+          echo "Pushing to Hugging Face Space..."
+          git push huggingface main --force
+          
+          # Verify push was successful
+          if [ $? -eq 0 ]; then
+            echo "✅ Successfully synced to Hugging Face Space: Arko007/chest-disease"
+            echo "View your Space at: https://huggingface.co/spaces/Arko007/chest-disease"
+          else
+            echo "❌ Failed to sync to Hugging Face Space"
+            exit 1
+          fi
+      
+      - name: Clean up credentials
+        if: always()
+        run: |
+          rm -f ~/.git-credentials
