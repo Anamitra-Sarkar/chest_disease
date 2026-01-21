@@ -1,3 +1,12 @@
+---
+license: apache-2.0
+title: Chest Disease Classification
+sdk: docker
+emoji: 🏃
+colorFrom: blue
+colorTo: indigo
+pinned: false
+---
 # Chest X-Ray Assistant
 
 A production-ready, medical-grade AI assistant for chest X-ray analysis. Built with a deterministic inference pipeline and strict safety controls.
