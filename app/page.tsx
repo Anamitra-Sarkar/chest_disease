@@ -1,9 +1,60 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Activity, Shield, Info, ChevronDown, Heart, Zap, Brain } from 'lucide-react'
+import { Activity, Shield, Info, ChevronDown, Heart, Zap, Brain, Stethoscope, Syringe, Pill } from 'lucide-react'
+
+// Floating icon component
+function FloatingIcon({ icon: Icon, delay }: { icon: any, delay: number }) {
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const velocityRef = useRef({ 
+    x: (Math.random() - 0.5) * 0.3, 
+    y: (Math.random() - 0.5) * 0.3 
+  })
+
+  useEffect(() => {
+    // Initialize random position
+    setPosition({
+      x: Math.random() * 80 + 10, // 10-90% of width
+      y: Math.random() * 80 + 10  // 10-90% of height
+    })
+
+    const interval = setInterval(() => {
+      setPosition(prev => {
+        const velocity = velocityRef.current
+        let newX = prev.x + velocity.x
+        let newY = prev.y + velocity.y
+
+        // Bounce off edges
+        if (newX < 5 || newX > 95) {
+          velocity.x = -velocity.x
+          newX = newX < 5 ? 5 : 95
+        }
+        if (newY < 5 || newY > 95) {
+          velocity.y = -velocity.y
+          newY = newY < 5 ? 5 : 95
+        }
+
+        return { x: newX, y: newY }
+      })
+    }, 50)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div 
+      className="absolute transition-all duration-100 ease-linear pointer-events-none"
+      style={{ 
+        left: `${position.x}%`, 
+        top: `${position.y}%`
+      }}
+    >
+      <Icon className="w-8 h-8 md:w-10 md:h-10 text-accent-400 opacity-20" />
+    </div>
+  )
+}
 
 export default function Home() {
   const [currentVideo, setCurrentVideo] = useState(0)
@@ -20,8 +71,16 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-medical-50 to-medical-100">
-      <div className="container mx-auto px-4 py-16">
+    <div className="min-h-screen bg-gradient-to-b from-medical-50 to-medical-100 relative overflow-hidden">
+      {/* Floating Medical Icons */}
+      <FloatingIcon icon={Activity} delay={0} />
+      <FloatingIcon icon={Heart} delay={0.5} />
+      <FloatingIcon icon={Stethoscope} delay={1} />
+      <FloatingIcon icon={Syringe} delay={1.5} />
+      <FloatingIcon icon={Pill} delay={2} />
+      <FloatingIcon icon={Brain} delay={2.5} />
+      
+      <div className="container mx-auto px-4 py-16 relative z-10">
         <div className="max-w-4xl mx-auto">
           <header className="text-center mb-16">
             <div className="flex items-center justify-center mb-6">
@@ -36,9 +95,9 @@ export default function Home() {
           </header>
 
           {/* Video Loop Section */}
-          <div className="bg-white rounded-2xl shadow-medical-lg overflow-hidden mb-12">
+          <div className="bg-white rounded-2xl shadow-medical-lg overflow-hidden mb-12 relative z-20">
             {!videoError ? (
-              <div className="relative w-full h-96">
+              <div className="relative w-full h-[500px] md:h-[700px] lg:h-[900px]">
                 <video
                   key={currentVideo}
                   src={videos[currentVideo]}
@@ -49,7 +108,7 @@ export default function Home() {
                   onError={handleVideoError}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute bottom-4 right-4 flex gap-2">
+                <div className="absolute bottom-4 right-4 flex gap-2 z-30">
                   {videos.map((_, index) => (
                     <button
                       key={index}
@@ -63,7 +122,7 @@ export default function Home() {
                 </div>
               </div>
             ) : (
-              <div className="relative w-full h-96 bg-gradient-to-br from-accent-50 to-medical-100 flex items-center justify-center">
+              <div className="relative w-full h-96 bg-gradient-to-br from-accent-50 to-medical-100 flex items-center justify-center z-20">
                 <div className="text-center p-8">
                   <Activity className="w-16 h-16 text-accent-600 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-medical-900 mb-2">
@@ -77,7 +136,7 @@ export default function Home() {
             )}
           </div>
 
-          <div className="bg-white rounded-2xl shadow-medical-lg p-8 mb-12">
+          <div className="bg-white rounded-2xl shadow-medical-lg p-8 mb-12 relative z-20">
             <p className="text-lg text-medical-700 leading-relaxed mb-6">
               This assistant uses a trained neural network to analyze chest X-ray images
               and provide educational insights about potential findings. It is designed
@@ -138,7 +197,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-r-lg mb-12">
+          <div className="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-r-lg mb-12 relative z-20">
             <div className="flex items-start gap-3">
               <Info className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
               <div>
@@ -156,7 +215,7 @@ export default function Home() {
           </div>
 
           {/* About Section */}
-          <div className="bg-white rounded-2xl shadow-medical-lg p-8">
+          <div className="bg-white rounded-2xl shadow-medical-lg p-8 relative z-20">
             <button
               onClick={() => setShowAbout(!showAbout)}
               className="flex items-center justify-between w-full text-left mb-4"
