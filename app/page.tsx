@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Activity, Shield, Info, ChevronDown, Heart, Zap, Brain, Stethoscope, Syringe, Pill } from 'lucide-react'
@@ -8,7 +8,7 @@ import { Activity, Shield, Info, ChevronDown, Heart, Zap, Brain, Stethoscope, Sy
 // Floating icon component
 function FloatingIcon({ icon: Icon, delay }: { icon: any, delay: number }) {
   const [position, setPosition] = useState({ x: 0, y: 0 })
-  const [velocity, setVelocity] = useState({ 
+  const velocityRef = useRef({ 
     x: (Math.random() - 0.5) * 0.3, 
     y: (Math.random() - 0.5) * 0.3 
   })
@@ -22,36 +22,33 @@ function FloatingIcon({ icon: Icon, delay }: { icon: any, delay: number }) {
 
     const interval = setInterval(() => {
       setPosition(prev => {
+        const velocity = velocityRef.current
         let newX = prev.x + velocity.x
         let newY = prev.y + velocity.y
-        let newVelX = velocity.x
-        let newVelY = velocity.y
 
         // Bounce off edges
         if (newX < 5 || newX > 95) {
-          newVelX = -newVelX
+          velocity.x = -velocity.x
           newX = newX < 5 ? 5 : 95
         }
         if (newY < 5 || newY > 95) {
-          newVelY = -newVelY
+          velocity.y = -velocity.y
           newY = newY < 5 ? 5 : 95
         }
 
-        setVelocity({ x: newVelX, y: newVelY })
         return { x: newX, y: newY }
       })
     }, 50)
 
     return () => clearInterval(interval)
-  }, [velocity.x, velocity.y])
+  }, [])
 
   return (
     <div 
       className="absolute transition-all duration-100 ease-linear pointer-events-none"
       style={{ 
         left: `${position.x}%`, 
-        top: `${position.y}%`,
-        animationDelay: `${delay}s`
+        top: `${position.y}%`
       }}
     >
       <Icon className="w-8 h-8 md:w-10 md:h-10 text-accent-400 opacity-20" />
