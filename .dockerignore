@@ -49,17 +49,16 @@ postcss.config.js
 next.config.js
 app/
 
-# Documentation
-*.md
+# Documentation (keep README_HF.md for HF Spaces)
 ARCHITECTURE.md
 DEPLOYMENT.md
 DEVELOPMENT.md
 PROJECT_SUMMARY.md
 QUICK_START.md
-README.md
 REQUIREMENTS_CHECKLIST.md
 SECURITY.md
 LICENSE
+HUGGINGFACE_DEPLOYMENT.md
 
 # Logs
 *.log
@@ -81,6 +80,5 @@ htmlcov/
 uploads/
 
 # Deployment configs (not needed in container)
-railway.toml
-vercel.json
 docker-compose.yml
+

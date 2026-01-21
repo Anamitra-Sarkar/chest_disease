@@ -21,6 +21,7 @@ RUN pip install --no-cache-dir huggingface-hub
 # Copy application code
 COPY backend/ ./backend/
 COPY app.py .
+COPY README_HF.md ./README.md
 
 # Download model from Hugging Face
 RUN python -c "from huggingface_hub import hf_hub_download; hf_hub_download(repo_id='Arko007/chexpert-cnn-from-scratch', filename='epoch_001_mAUROC_0.486525.pth', local_dir='.')"
