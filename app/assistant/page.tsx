@@ -24,6 +24,7 @@ export default function AssistantPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
+  const [videoError, setVideoError] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -63,6 +64,10 @@ export default function AssistantPage() {
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
+  }
+
+  const handleVideoError = () => {
+    setVideoError(true)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -134,30 +139,48 @@ export default function AssistantPage() {
   }
 
   return (
-    <div className="min-h-screen bg-medical-50 flex flex-col">
-      <header className="bg-white border-b border-medical-200 px-4 py-4">
-        <div className="container mx-auto max-w-4xl">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="p-2 hover:bg-medical-100 rounded-lg transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5 text-medical-600" />
-            </Link>
-            <div className="flex items-center gap-3">
-              <Activity className="w-6 h-6 text-accent-600" />
-              <div>
-                <h1 className="font-semibold text-medical-900">Chest X-Ray Assistant</h1>
-                <p className="text-xs text-medical-500">Educational Analysis Tool</p>
+    <div className="min-h-screen bg-medical-50 flex flex-col relative">
+      {/* Background Video */}
+      <div className="fixed inset-0 z-0">
+        {!videoError ? (
+          <video
+            src="/video4.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            onError={handleVideoError}
+            className="w-full h-full object-cover opacity-30"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-medical-50 to-accent-50" />
+        )}
+      </div>
+
+      <div className="relative z-10">
+        <header className="bg-white/95 backdrop-blur-sm border-b border-medical-200 px-4 py-4">
+          <div className="container mx-auto max-w-4xl">
+            <div className="flex items-center gap-4">
+              <Link
+                href="/"
+                className="p-2 hover:bg-medical-100 rounded-lg transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5 text-medical-600" />
+              </Link>
+              <div className="flex items-center gap-3">
+                <Activity className="w-6 h-6 text-accent-600" />
+                <div>
+                  <h1 className="font-semibold text-medical-900">Chest X-Ray Assistant</h1>
+                  <p className="text-xs text-medical-500">Educational Analysis Tool</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="flex-1 container mx-auto max-w-4xl px-4 py-6">
-        <div className="bg-white rounded-2xl shadow-medical flex flex-col h-[calc(100vh-200px)] min-h-[500px]">
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <main className="flex-1 container mx-auto max-w-4xl px-4 py-6">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-medical flex flex-col h-[calc(100vh-200px)] min-h-[500px]">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {messages.map((message, index) => (
               <div
                 key={index}
@@ -202,7 +225,23 @@ export default function AssistantPage() {
                     </div>
                   )}
                   <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                    {message.content}
+                    {message.content.split('\n').map((line, idx) => {
+                      // Handle bold text
+                      const boldRegex = /\*\*(.*?)\*\*/g
+                      const parts = line.split(boldRegex)
+                      
+                      return (
+                        <p key={idx} className="mb-2 last:mb-0">
+                          {parts.map((part, partIdx) => 
+                            partIdx % 2 === 1 ? (
+                              <strong key={partIdx}>{part}</strong>
+                            ) : (
+                              part
+                            )
+                          )}
+                        </p>
+                      )
+                    })}
                   </div>
                 </div>
               </div>
@@ -221,7 +260,7 @@ export default function AssistantPage() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="border-t border-medical-200 p-4 bg-medical-50 rounded-b-2xl">
+          <div className="border-t border-medical-200 p-4 bg-white/95 backdrop-blur-sm rounded-b-2xl">
             <form onSubmit={handleSubmit} className="space-y-3">
               {uploadedImage && (
                 <div className="relative inline-block">
@@ -282,7 +321,7 @@ export default function AssistantPage() {
           </div>
         </div>
 
-        <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <div className="mt-4 bg-amber-50/95 backdrop-blur-sm border border-amber-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
             <div>
@@ -296,6 +335,7 @@ export default function AssistantPage() {
           </div>
         </div>
       </main>
+      </div>
     </div>
   )
 }

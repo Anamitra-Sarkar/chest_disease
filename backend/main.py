@@ -145,7 +145,16 @@ def load_model() -> CheXpertCNN:
         model = CheXpertCNN(num_classes=14)
 
         # Load state dict
-        state_dict = torch.load(MODEL_PATH, map_location=INFERENCE_DEVICE)
+        checkpoint = torch.load(MODEL_PATH, map_location=INFERENCE_DEVICE)
+        
+        # Extract model state dict from checkpoint if it's a full training checkpoint
+        if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+            state_dict = checkpoint['model_state_dict']
+            logger.info(f"Loaded model from checkpoint (epoch: {checkpoint.get('epoch', 'unknown')})")
+        else:
+            # Direct model state dict
+            state_dict = checkpoint
+        
         model.load_state_dict(state_dict)
 
         # Set to eval mode - CRITICAL: no training, no dropout variation

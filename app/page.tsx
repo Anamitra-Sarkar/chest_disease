@@ -38,7 +38,7 @@ export default function Home() {
           {/* Video Loop Section */}
           <div className="bg-white rounded-2xl shadow-medical-lg overflow-hidden mb-12">
             {!videoError ? (
-              <div className="relative w-full h-96">
+              <div className="relative w-full h-96 md:h-[600px] lg:h-screen lg:max-h-[800px]">
                 <video
                   key={currentVideo}
                   src={videos[currentVideo]}
