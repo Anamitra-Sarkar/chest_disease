@@ -153,7 +153,7 @@ export default function AssistantPage() {
             muted
             playsInline
             onError={handleVideoError}
-            className="w-full h-full object-cover opacity-30"
+            className="w-full h-full object-cover opacity-20"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-medical-50 to-accent-50" />
@@ -161,7 +161,7 @@ export default function AssistantPage() {
       </div>
 
       <div className="relative z-10">
-        <header className="bg-white/95 backdrop-blur-sm border-b border-medical-200 px-4 py-4">
+        <header className="bg-white/80 backdrop-blur-md border-b border-medical-200 px-4 py-4">
           <div className="container mx-auto max-w-4xl">
             <div className="flex items-center gap-4">
               <Link
@@ -182,7 +182,7 @@ export default function AssistantPage() {
         </header>
 
         <main className="flex-1 container mx-auto max-w-4xl px-4 py-6">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-medical flex flex-col h-[calc(100vh-200px)] min-h-[500px]">
+          <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-medical flex flex-col h-[calc(100vh-200px)] min-h-[500px]">
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {messages.map((message, index) => (
               <div
@@ -262,7 +262,7 @@ export default function AssistantPage() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="border-t border-medical-200 p-4 bg-white/95 backdrop-blur-sm rounded-b-2xl">
+          <div className="border-t border-medical-200 p-4 bg-white/70 backdrop-blur-md rounded-b-2xl">
             <form onSubmit={handleSubmit} className="space-y-3">
               {uploadedImage && (
                 <div className="relative inline-block">
@@ -323,7 +323,7 @@ export default function AssistantPage() {
           </div>
         </div>
 
-        <div className="mt-4 bg-amber-50/95 backdrop-blur-sm border border-amber-200 rounded-lg p-4">
+        <div className="mt-4 bg-amber-50/80 backdrop-blur-md border border-amber-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
             <div>
