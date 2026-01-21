@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Activity, Shield, Info, ChevronDown, Heart, Zap, Brain, Stethoscope, Syringe, Pill } from 'lucide-react'
+import { Activity, Shield, Info, ChevronDown, Heart, Zap, Brain, Stethoscope, Syringe, Pill, Thermometer, Microscope, Clipboard, FileText, Radio } from 'lucide-react'
 
 // Floating icon component
 function FloatingIcon({ icon: Icon, delay }: { icon: any, delay: number }) {
@@ -57,28 +57,25 @@ function FloatingIcon({ icon: Icon, delay }: { icon: any, delay: number }) {
 }
 
 export default function Home() {
-  const [currentVideo, setCurrentVideo] = useState(0)
   const [showAbout, setShowAbout] = useState(false)
-  const [videoError, setVideoError] = useState(false)
-  const videos = ['/video1.mp4', '/video2.mp4', '/video3.mp4']
-
-  const handleVideoEnd = () => {
-    setCurrentVideo((prev) => (prev + 1) % videos.length)
-  }
-
-  const handleVideoError = () => {
-    setVideoError(true)
-  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-medical-50 to-medical-100 relative overflow-hidden">
-      {/* Floating Medical Icons */}
+    <div className="min-h-screen bg-gradient-to-br from-medical-50 via-accent-50 to-medical-100 relative overflow-hidden">
+      {/* Floating Medical Icons - Increased to 14 */}
       <FloatingIcon icon={Activity} delay={0} />
       <FloatingIcon icon={Heart} delay={0.5} />
       <FloatingIcon icon={Stethoscope} delay={1} />
       <FloatingIcon icon={Syringe} delay={1.5} />
       <FloatingIcon icon={Pill} delay={2} />
       <FloatingIcon icon={Brain} delay={2.5} />
+      <FloatingIcon icon={Thermometer} delay={3} />
+      <FloatingIcon icon={Microscope} delay={3.5} />
+      <FloatingIcon icon={Clipboard} delay={4} />
+      <FloatingIcon icon={FileText} delay={4.5} />
+      <FloatingIcon icon={Radio} delay={5} />
+      <FloatingIcon icon={Shield} delay={5.5} />
+      <FloatingIcon icon={Zap} delay={6} />
+      <FloatingIcon icon={Activity} delay={6.5} />
       
       <div className="container mx-auto px-4 py-16 relative z-10">
         <div className="max-w-4xl mx-auto">
@@ -94,49 +91,51 @@ export default function Home() {
             </p>
           </header>
 
-          {/* Video Loop Section */}
-          <div className="bg-white rounded-2xl shadow-medical-lg overflow-hidden mb-12 relative z-20">
-            {!videoError ? (
-              <div className="relative w-full h-[500px] md:h-[700px] lg:h-[900px]">
-                <video
-                  key={currentVideo}
-                  src={videos[currentVideo]}
-                  autoPlay
-                  muted
-                  playsInline
-                  onEnded={handleVideoEnd}
-                  onError={handleVideoError}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute bottom-4 right-4 flex gap-2 z-30">
-                  {videos.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentVideo(index)}
-                      className={`w-2 h-2 rounded-full transition-all ${
-                        index === currentVideo ? 'bg-accent-600 w-8' : 'bg-white/50'
-                      }`}
-                      aria-label={`Go to video ${index + 1}`}
-                    />
-                  ))}
+          {/* Enhanced Feature Showcase Section */}
+          <div className="bg-gradient-to-br from-white to-accent-50/30 rounded-2xl shadow-medical-glow overflow-hidden mb-12 relative z-20 border-2 border-accent-200/50">
+            <div className="relative w-full py-16 px-8">
+              <div className="text-center">
+                <div className="inline-block p-6 bg-gradient-to-br from-accent-100 to-accent-200 rounded-full mb-6 shadow-glow">
+                  <Activity className="w-24 h-24 text-accent-700" />
+                </div>
+                <h3 className="text-3xl font-bold text-medical-900 mb-4 glow-text">
+                  AI-Powered Chest X-Ray Analysis
+                </h3>
+                <p className="text-xl text-medical-700 max-w-2xl mx-auto leading-relaxed">
+                  Advanced deep learning technology trained on thousands of medical images
+                  to provide educational insights into chest X-ray findings
+                </p>
+                <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+                  <div className="flex flex-col items-center">
+                    <div className="bg-accent-100 p-4 rounded-full mb-3 shadow-glow-sm">
+                      <Brain className="w-10 h-10 text-accent-600" />
+                    </div>
+                    <span className="text-sm font-semibold text-medical-800">Neural Network</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div className="bg-accent-100 p-4 rounded-full mb-3 shadow-glow-sm">
+                      <Zap className="w-10 h-10 text-accent-600" />
+                    </div>
+                    <span className="text-sm font-semibold text-medical-800">Real-time</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div className="bg-accent-100 p-4 rounded-full mb-3 shadow-glow-sm">
+                      <Shield className="w-10 h-10 text-accent-600" />
+                    </div>
+                    <span className="text-sm font-semibold text-medical-800">Secure</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div className="bg-accent-100 p-4 rounded-full mb-3 shadow-glow-sm">
+                      <Microscope className="w-10 h-10 text-accent-600" />
+                    </div>
+                    <span className="text-sm font-semibold text-medical-800">Accurate</span>
+                  </div>
                 </div>
               </div>
-            ) : (
-              <div className="relative w-full h-96 bg-gradient-to-br from-accent-50 to-medical-100 flex items-center justify-center z-20">
-                <div className="text-center p-8">
-                  <Activity className="w-16 h-16 text-accent-600 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-medical-900 mb-2">
-                    AI-Powered Chest X-Ray Analysis
-                  </h3>
-                  <p className="text-medical-600">
-                    Advanced deep learning for medical imaging insights
-                  </p>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-medical-lg p-8 mb-12 relative z-20">
+          <div className="bg-gradient-to-br from-white to-accent-50/20 rounded-2xl shadow-medical-glow p-8 mb-12 relative z-20 border border-accent-200/30">
             <p className="text-lg text-medical-700 leading-relaxed mb-6">
               This assistant uses a trained neural network to analyze chest X-ray images
               and provide educational insights about potential findings. It is designed
@@ -144,9 +143,9 @@ export default function Home() {
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="flex flex-col items-center text-center gap-3">
-                <div className="bg-accent-50 p-4 rounded-lg">
-                  <Brain className="w-8 h-8 text-accent-600" />
+              <div className="flex flex-col items-center text-center gap-3 p-4 rounded-xl bg-gradient-to-b from-accent-50 to-white shadow-glow-sm hover:shadow-glow transition-all duration-300">
+                <div className="bg-gradient-to-br from-accent-100 to-accent-200 p-4 rounded-lg shadow-glow-sm">
+                  <Brain className="w-8 h-8 text-accent-700" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-medical-900 mb-1">
@@ -158,9 +157,9 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="flex flex-col items-center text-center gap-3">
-                <div className="bg-accent-50 p-4 rounded-lg">
-                  <Shield className="w-8 h-8 text-accent-600" />
+              <div className="flex flex-col items-center text-center gap-3 p-4 rounded-xl bg-gradient-to-b from-accent-50 to-white shadow-glow-sm hover:shadow-glow transition-all duration-300">
+                <div className="bg-gradient-to-br from-accent-100 to-accent-200 p-4 rounded-lg shadow-glow-sm">
+                  <Shield className="w-8 h-8 text-accent-700" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-medical-900 mb-1">
@@ -172,9 +171,9 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="flex flex-col items-center text-center gap-3">
-                <div className="bg-accent-50 p-4 rounded-lg">
-                  <Zap className="w-8 h-8 text-accent-600" />
+              <div className="flex flex-col items-center text-center gap-3 p-4 rounded-xl bg-gradient-to-b from-accent-50 to-white shadow-glow-sm hover:shadow-glow transition-all duration-300">
+                <div className="bg-gradient-to-br from-accent-100 to-accent-200 p-4 rounded-lg shadow-glow-sm">
+                  <Zap className="w-8 h-8 text-accent-700" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-medical-900 mb-1">
@@ -190,7 +189,7 @@ export default function Home() {
             <div className="flex justify-center">
               <Link
                 href="/assistant"
-                className="relative bg-accent-600 hover:bg-accent-700 text-white font-semibold py-4 px-10 rounded-lg transition-all duration-200 glow-button"
+                className="relative bg-gradient-to-r from-accent-600 to-accent-700 hover:from-accent-700 hover:to-accent-800 text-white font-semibold py-4 px-10 rounded-lg transition-all duration-300 glow-button shadow-glow-lg hover:shadow-glow-xl transform hover:scale-105"
               >
                 <span className="relative z-10">Start Analysis</span>
               </Link>
