@@ -1,28 +1,48 @@
 #!/bin/bash
 
 # Model Download Script for CheXpert CNN
-# This script helps download the pre-trained model
+# This script downloads the pre-trained model from Hugging Face Hub
 
-MODEL_URL="https://github.com/Arko007/chexpert-cnn-from-scratch/releases/download/v1.0/epoch_001_mAUROC_0.486525.pth"
 MODEL_FILE="epoch_001_mAUROC_0.486525.pth"
 
 echo "=========================================="
 echo "CheXpert CNN Model Download Script"
 echo "=========================================="
 echo ""
-echo "Downloading model file..."
+echo "Downloading model from Hugging Face Hub..."
 echo ""
 
-# Check if curl is installed
-if ! command -v curl &> /dev/null; then
-    echo "Error: curl is not installed."
-    echo "Please install curl or download the model manually from:"
-    echo "https://github.com/Arko007/chexpert-cnn-from-scratch"
+# Check if Python is installed
+if ! command -v python3 &> /dev/null; then
+    echo "Error: Python 3 is not installed."
+    echo "Please install Python 3 to continue."
     exit 1
 fi
 
-# Download the model
-curl -L -o "$MODEL_FILE" "$MODEL_URL"
+# Install huggingface-hub if not already installed
+pip install -q huggingface-hub
+
+# Download the model using huggingface-hub
+python3 -c "
+from huggingface_hub import hf_hub_download
+import os
+
+print('Downloading model from Arko007/chexpert-cnn-from-scratch...')
+try:
+    file_path = hf_hub_download(
+        repo_id='Arko007/chexpert-cnn-from-scratch',
+        filename='epoch_001_mAUROC_0.486525.pth',
+        local_dir='.'
+    )
+    print(f'Download successful!')
+    print(f'Model saved to: {file_path}')
+except Exception as e:
+    print(f'Error downloading model: {e}')
+    print('')
+    print('Please try downloading manually from:')
+    print('https://huggingface.co/Arko007/chexpert-cnn-from-scratch')
+    exit(1)
+"
 
 # Check if download was successful
 if [ $? -eq 0 ] && [ -f "$MODEL_FILE" ]; then
@@ -44,7 +64,7 @@ else
     echo "=========================================="
     echo ""
     echo "Please download the model manually from:"
-    echo "https://github.com/Arko007/chexpert-cnn-from-scratch"
+    echo "https://huggingface.co/Arko007/chexpert-cnn-from-scratch"
     echo ""
     echo "Place the downloaded file in the project root as:"
     echo "  epoch_001_mAUROC_0.486525.pth"

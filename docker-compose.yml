@@ -4,18 +4,16 @@ services:
   backend:
     build: .
     ports:
-      - "8000:8000"
+      - "7860:7860"
     environment:
       - GROQ_API_KEY=${GROQ_API_KEY}
-      - MODEL_PATH=/app/epoch_001_mAUROC_0.486525.pth
+      - MODEL_PATH=epoch_001_mAUROC_0.486525.pth
       - INFERENCE_DEVICE=cpu
-      - PORT=8000
-    volumes:
-      - ./epoch_001_mAUROC_0.486525.pth:/app/epoch_001_mAUROC_0.486525.pth:ro
+      - PORT=7860
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:7860/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 30s
     restart: unless-stopped
