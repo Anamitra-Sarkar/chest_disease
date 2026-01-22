@@ -148,12 +148,43 @@ def load_model() -> CheXpertCNN:
         checkpoint = torch.load(MODEL_PATH, map_location=INFERENCE_DEVICE)
         
         # Extract model state dict from checkpoint if it's a full training checkpoint
-        if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
-            state_dict = checkpoint['model_state_dict']
-            logger.info(f"Loaded model from checkpoint (epoch: {checkpoint.get('epoch', 'unknown')})")
-        else:
+        state_dict = None
+        source_key = None
+        checkpoint_keys = ("model_state_dict", "ema_state_dict", "state_dict")
+        state_dict_prefixes = ("module.", "model.")
+        if isinstance(checkpoint, dict):
+            for key in checkpoint_keys:
+                if key in checkpoint:
+                    state_dict = checkpoint[key]
+                    source_key = key
+                    break
+
+        if state_dict is None:
             # Direct model state dict
             state_dict = checkpoint
+
+        if source_key:
+            epoch_info = checkpoint.get("epoch", "unknown")
+            logger.info(f"Loaded model from checkpoint ({source_key}, epoch: {epoch_info})")
+
+        if isinstance(state_dict, dict) and state_dict:
+            total_keys = 0
+            counts = {prefix: 0 for prefix in state_dict_prefixes}
+            non_string_key = False
+            for key in state_dict.keys():
+                if not isinstance(key, str):
+                    non_string_key = True
+                    break
+                total_keys += 1
+                for prefix in state_dict_prefixes:
+                    if key.startswith(prefix):
+                        counts[prefix] += 1
+            if not non_string_key:
+                for prefix in state_dict_prefixes:
+                    if counts[prefix] == total_keys:
+                        state_dict = {k[len(prefix):]: v for k, v in state_dict.items()}
+                        logger.info(f"Stripped '{prefix}' prefix from model weights")
+                        break
         
         model.load_state_dict(state_dict)
 
