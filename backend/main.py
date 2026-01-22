@@ -150,7 +150,7 @@ def load_model() -> CheXpertCNN:
         # Extract model state dict from checkpoint if it's a full training checkpoint
         state_dict = None
         source_key = None
-        checkpoint_keys = ("model_state_dict", "ema_state_dict", "state_dict")
+        checkpoint_keys = ("ema_state_dict", "model_state_dict", "state_dict")
         state_dict_prefixes = ("module.", "model.")
         if isinstance(checkpoint, dict):
             for key in checkpoint_keys:
@@ -186,7 +186,7 @@ def load_model() -> CheXpertCNN:
                         logger.info(f"Stripped '{prefix}' prefix from model weights")
                         break
         
-        model.load_state_dict(state_dict)
+        model.load_state_dict(state_dict, strict=False)
 
         # Set to eval mode - CRITICAL: no training, no dropout variation
         model.eval()
