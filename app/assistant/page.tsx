@@ -177,7 +177,7 @@ export default function AssistantPage() {
 
       const assistantMessage: Message = {
         role: 'assistant',
-        content: data.response,
+        content: typeof data.response === 'string' ? data.response : (data.response ?? 'Unable to generate response.'),
         hasImageAnalysis: data.has_image_analysis || false,
         conditions: data.conditions || undefined,
       }
