@@ -320,6 +320,9 @@ def interpret_with_llm(
         raise HTTPException(status_code=500, detail="LLM service not configured")
 
     try:
+        os.environ.pop("HTTP_PROXY", None)
+        os.environ.pop("HTTPS_PROXY", None)
+        os.environ.pop("ALL_PROXY", None)
         client = Groq(api_key=GROQ_API_KEY)
 
         # Format conditions for the prompt
@@ -388,6 +391,9 @@ def chat_without_image(message: str) -> str:
         raise HTTPException(status_code=500, detail="LLM service not configured")
 
     try:
+        os.environ.pop("HTTP_PROXY", None)
+        os.environ.pop("HTTPS_PROXY", None)
+        os.environ.pop("ALL_PROXY", None)
         client = Groq(api_key=GROQ_API_KEY)
 
         system_prompt = """You are a helpful medical education assistant focusing on radiology and chest X-ray knowledge.
