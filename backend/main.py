@@ -390,11 +390,22 @@ def chat_without_image(message: str) -> str:
         logger.error("Groq API key not configured")
         raise HTTPException(status_code=500, detail="LLM service not configured")
 
+    # Inside chat_without_image(...)
     try:
         os.environ.pop("HTTP_PROXY", None)
         os.environ.pop("HTTPS_PROXY", None)
         os.environ.pop("ALL_PROXY", None)
-        client = Groq(api_key=GROQ_API_KEY)
+    
+        try:
+            client = Groq(api_key=GROQ_API_KEY)
+        except Exception:
+            logger.exception("Failed to initialize Groq client in chat_without_image")
+            raise HTTPException(status_code=500, detail="LLM client initialization failed")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error preparing LLM client: {str(e)}")
+        raise HTTPException(status_code=500, detail="LLM service not available")
 
         system_prompt = """You are a helpful medical education assistant focusing on radiology and chest X-ray knowledge.
 
