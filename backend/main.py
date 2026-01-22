@@ -220,10 +220,17 @@ def preprocess_image(image_bytes: bytes) -> torch.Tensor:
     NO storage.
     NO fallback behavior.
     """
+    if not image_bytes:
+        raise ValueError("Image data is empty")
+    
     try:
         # Load image from bytes
         image = Image.open(io.BytesIO(image_bytes))
+    except Exception as e:
+        logger.error(f"Failed to open image: {str(e)}")
+        raise ValueError(f"Invalid image format: unable to decode image")
 
+    try:
         # Convert to grayscale (1 channel)
         image = image.convert('L')
 
@@ -247,7 +254,7 @@ def preprocess_image(image_bytes: bytes) -> torch.Tensor:
 
     except Exception as e:
         logger.error(f"Image preprocessing error: {str(e)}")
-        raise ValueError(f"Invalid image format: {str(e)}")
+        raise ValueError(f"Failed to preprocess image: {str(e)}")
 
 
 def run_inference(image_tensor: torch.Tensor) -> Dict[str, float]:
@@ -260,10 +267,14 @@ def run_inference(image_tensor: torch.Tensor) -> Dict[str, float]:
     No random sampling. No dropout (eval mode).
     Purely deterministic given same input.
     """
+    if model is None:
+        logger.error("Model not loaded")
+        raise RuntimeError("Model not initialized")
+    
+    if image_tensor is None or image_tensor.numel() == 0:
+        raise RuntimeError("Invalid image tensor")
+    
     try:
-        # Ensure model is loaded
-        load_model()
-
         # Run inference with no gradient calculation
         with torch.no_grad():
             outputs = model(image_tensor)
@@ -305,7 +316,8 @@ def interpret_with_llm(
     This is a controlled system prompt to ensure safety.
     """
     if not GROQ_API_KEY:
-        raise HTTPException(status_code=500, detail="Groq API key not configured")
+        logger.error("Groq API key not configured")
+        raise HTTPException(status_code=500, detail="LLM service not configured")
 
     try:
         client = Groq(api_key=GROQ_API_KEY)
@@ -359,7 +371,10 @@ Provide an educational interpretation of these results. Remember:
 
     except Exception as e:
         logger.error(f"LLM interpretation error: {str(e)}")
-        raise RuntimeError(f"Failed to interpret results: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to generate interpretation. Please try again."
+        )
 
 
 def chat_without_image(message: str) -> str:
@@ -369,7 +384,8 @@ def chat_without_image(message: str) -> str:
     The assistant answers general questions but does NOT imply access to imaging data.
     """
     if not GROQ_API_KEY:
-        raise HTTPException(status_code=500, detail="Groq API key not configured")
+        logger.error("Groq API key not configured")
+        raise HTTPException(status_code=500, detail="LLM service not configured")
 
     try:
         client = Groq(api_key=GROQ_API_KEY)
@@ -401,7 +417,10 @@ Tone: Professional, educational, careful, helpful."""
 
     except Exception as e:
         logger.error(f"Chat error: {str(e)}")
-        raise RuntimeError(f"Failed to process chat: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to process chat request. Please try again."
+        )
 
 
 @app.on_event("startup")
@@ -417,6 +436,7 @@ async def startup_event():
 
 
 @app.get("/health")
+@app.head("/health")
 async def health_check():
     """Health check endpoint."""
     return {
@@ -444,42 +464,95 @@ async def chat(
     try:
         # Case 1: Only text message (no image)
         if image is None:
-            if not message.strip():
+            if not message or not message.strip():
                 raise HTTPException(
                     status_code=400,
                     detail="Please provide a message or upload an image"
                 )
 
-            response = chat_without_image(message)
+            response_text = chat_without_image(message.strip())
 
             return JSONResponse({
-                "response": response,
+                "response": response_text,
                 "has_image_analysis": False,
                 "conditions": None,
             })
 
         # Case 2 & 3: Image provided (with or without message)
-        # Validate image type
-        if not image.content_type or not image.content_type.startswith('image/'):
+        # Validate image
+        if not image.content_type:
+            raise HTTPException(
+                status_code=400,
+                detail="Unable to determine file type"
+            )
+        
+        if not image.content_type.startswith('image/'):
             raise HTTPException(
                 status_code=400,
                 detail="Invalid file type. Please upload an image."
             )
 
         # Read image bytes (NO storage)
-        image_bytes = await image.read()
+        try:
+            image_bytes = await image.read()
+            if not image_bytes or len(image_bytes) == 0:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Uploaded image is empty"
+                )
+        except Exception as e:
+            logger.error(f"Error reading image: {str(e)}")
+            raise HTTPException(
+                status_code=400,
+                detail="Failed to read image file"
+            )
 
         # Preprocess image
-        image_tensor = preprocess_image(image_bytes)
+        try:
+            image_tensor = preprocess_image(image_bytes)
+        except ValueError as e:
+            logger.error(f"Image preprocessing failed: {str(e)}")
+            raise HTTPException(
+                status_code=400,
+                detail=str(e)
+            )
+        except Exception as e:
+            logger.error(f"Unexpected preprocessing error: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to process image"
+            )
 
         # Run inference
-        conditions = run_inference(image_tensor)
+        try:
+            conditions = run_inference(image_tensor)
+        except RuntimeError as e:
+            logger.error(f"Inference failed: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail="Model inference failed"
+            )
+        except Exception as e:
+            logger.error(f"Unexpected inference error: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to analyze image"
+            )
 
         # Interpret with LLM
-        response = interpret_with_llm(conditions, message)
+        try:
+            response_text = interpret_with_llm(conditions, message.strip() if message else "")
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"LLM interpretation failed: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to generate interpretation"
+            )
 
         return JSONResponse({
-            "response": response,
+            "response": response_text,
             "has_image_analysis": True,
             "conditions": conditions,
         })
@@ -490,7 +563,7 @@ async def chat(
         logger.error(f"Chat endpoint error: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail=f"An error occurred processing your request"
+            detail="An error occurred processing your request"
         )
 
 
