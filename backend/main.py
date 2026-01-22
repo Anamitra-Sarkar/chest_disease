@@ -17,7 +17,7 @@ import numpy as np
 import os
 from dotenv import load_dotenv
 from groq import Groq
-from typing import Optional, Dict, List
+from typing import Optional, Dict, Any
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -298,6 +298,113 @@ def run_inference(image_tensor: torch.Tensor) -> Dict[str, float]:
         raise RuntimeError(f"Inference failed: {str(e)}")
 
 
+def _extract_message_text_from_groq_response(resp: Any) -> Optional[str]:
+    """
+    Defensive extractor: handles SDK responses that might be objects or dicts.
+    Returns the text content if present, otherwise None.
+    """
+    try:
+        # Choices can be attribute or mapping
+        choices = None
+        if hasattr(resp, "choices"):
+            choices = resp.choices
+        elif isinstance(resp, dict) and "choices" in resp:
+            choices = resp["choices"]
+
+        if not choices or len(choices) == 0:
+            return None
+
+        first_choice = choices[0]
+
+        # If dict-like
+        if isinstance(first_choice, dict):
+            # check nested 'message' -> 'content' first, then 'text'
+            msg = first_choice.get("message")
+            if isinstance(msg, dict):
+                content = msg.get("content")
+                if content:
+                    return str(content)
+            text = first_choice.get("text")
+            if text:
+                return str(text)
+            # some SDKs return 'message' as string directly
+            if isinstance(msg, str):
+                return msg
+            return None
+
+        # Object-like
+        # try first_choice.message.content
+        message_obj = getattr(first_choice, "message", None)
+        if message_obj is not None:
+            content = getattr(message_obj, "content", None)
+            if content:
+                return str(content)
+        # fallback to first_choice.text
+        text_attr = getattr(first_choice, "text", None)
+        if text_attr:
+            return str(text_attr)
+
+    except Exception:
+        logger.exception("Error while extracting text from Groq response")
+        return None
+
+    return None
+
+
+def _call_groq_chat(system_prompt: str, user_prompt: str, model_name: str = "llama-3.3-70b-versatile", temperature: float = 0.3, max_tokens: int = 1000) -> str:
+    """
+    Make a Groq chat completion request with defensive initialization, logging,
+    and response validation. Raises HTTPException on failures so endpoints can
+    return appropriate status codes to clients.
+    """
+    if not GROQ_API_KEY:
+        logger.error("Groq API key not configured")
+        raise HTTPException(status_code=500, detail="LLM service not configured")
+
+    # Remove proxy env vars to avoid unexpected proxy injection
+    os.environ.pop("HTTP_PROXY", None)
+    os.environ.pop("HTTPS_PROXY", None)
+    os.environ.pop("ALL_PROXY", None)
+
+    # Initialize client defensively
+    try:
+        client = Groq(api_key=GROQ_API_KEY)
+    except Exception:
+        logger.exception("Failed to initialize Groq client")
+        raise HTTPException(status_code=500, detail="LLM client initialization failed")
+
+    # Perform the request
+    try:
+        resp = client.chat.completions.create(
+            model=model_name,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+    except Exception:
+        logger.exception("Error while calling Groq chat completions")
+        raise HTTPException(status_code=502, detail="LLM request failed. See server logs.")
+
+    # TEMP: log raw response for debugging (remove or reduce verbosity after resolving)
+    try:
+        logger.info(f"Groq raw response: {repr(resp)}")
+    except Exception:
+        logger.debug("Could not repr Groq response")
+
+    # Extract text defensively
+    message_text = _extract_message_text_from_groq_response(resp)
+
+    if not message_text or not isinstance(message_text, str) or not message_text.strip():
+        logger.error("LLM returned no usable text in response")
+        # Surface as a 502 so clients know an upstream service failed
+        raise HTTPException(status_code=502, detail="LLM returned no content. See server logs.")
+
+    return message_text
+
+
 def interpret_with_llm(
     conditions: Dict[str, float],
     user_message: str = ""
@@ -315,23 +422,13 @@ def interpret_with_llm(
 
     This is a controlled system prompt to ensure safety.
     """
-    if not GROQ_API_KEY:
-        logger.error("Groq API key not configured")
-        raise HTTPException(status_code=500, detail="LLM service not configured")
+    # Prepare prompts
+    conditions_str = "\n".join([
+        f"- {condition}: {probability:.3f}"
+        for condition, probability in conditions.items()
+    ])
 
-    try:
-        os.environ.pop("HTTP_PROXY", None)
-        os.environ.pop("HTTPS_PROXY", None)
-        os.environ.pop("ALL_PROXY", None)
-        client = Groq(api_key=GROQ_API_KEY)
-
-        # Format conditions for the prompt
-        conditions_str = "\n".join([
-            f"- {condition}: {probability:.3f}"
-            for condition, probability in conditions.items()
-        ])
-
-        system_prompt = """You are a medical AI assistant that provides educational explanations of chest X-ray analysis results.
+    system_prompt = """You are a medical AI assistant that provides educational explanations of chest X-ray analysis results.
 
 CRITICAL RULES (you must follow all):
 1. You are NOT a doctor and do NOT provide medical diagnoses
@@ -347,7 +444,7 @@ CRITICAL RULES (you must follow all):
 
 Tone: Professional, calm, educational, careful."""
 
-        user_prompt = f"""The AI model has analyzed a chest X-ray and produced the following probability estimates for different conditions:
+    user_prompt = f"""The AI model has analyzed a chest X-ray and produced the following probability estimates for different conditions:
 
 {conditions_str}
 
@@ -360,24 +457,8 @@ Provide an educational interpretation of these results. Remember:
 - Professional medical evaluation is essential
 - Always include a disclaimer"""
 
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            temperature=0.3,  # Low temperature for more deterministic responses
-            max_tokens=1000,
-        )
-
-        return response.choices[0].message.content or "Unable to generate response."
-
-    except Exception as e:
-        logger.error(f"LLM interpretation error: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to generate interpretation. Please try again."
-        )
+    # Call Groq with defensive validation
+    return _call_groq_chat(system_prompt, user_prompt, max_tokens=1000)
 
 
 def chat_without_image(message: str) -> str:
@@ -386,28 +467,7 @@ def chat_without_image(message: str) -> str:
 
     The assistant answers general questions but does NOT imply access to imaging data.
     """
-    if not GROQ_API_KEY:
-        logger.error("Groq API key not configured")
-        raise HTTPException(status_code=500, detail="LLM service not configured")
-
-    # Inside chat_without_image(...)
-    try:
-        os.environ.pop("HTTP_PROXY", None)
-        os.environ.pop("HTTPS_PROXY", None)
-        os.environ.pop("ALL_PROXY", None)
-    
-        try:
-            client = Groq(api_key=GROQ_API_KEY)
-        except Exception:
-            logger.exception("Failed to initialize Groq client in chat_without_image")
-            raise HTTPException(status_code=500, detail="LLM client initialization failed")
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Unexpected error preparing LLM client: {str(e)}")
-        raise HTTPException(status_code=500, detail="LLM service not available")
-
-        system_prompt = """You are a helpful medical education assistant focusing on radiology and chest X-ray knowledge.
+    system_prompt = """You are a helpful medical education assistant focusing on radiology and chest X-ray knowledge.
 
 CRITICAL RULES:
 1. Provide general medical education information only
@@ -420,24 +480,7 @@ CRITICAL RULES:
 
 Tone: Professional, educational, careful, helpful."""
 
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": message},
-            ],
-            temperature=0.3,
-            max_tokens=800,
-        )
-
-        return response.choices[0].message.content or "Unable to generate response."
-
-    except Exception as e:
-        logger.error(f"Chat error: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to process chat request. Please try again."
-        )
+    return _call_groq_chat(system_prompt, message, max_tokens=800)
 
 
 @app.on_event("startup")
@@ -449,6 +492,7 @@ async def startup_event():
         logger.info("API ready to serve requests")
     except Exception as e:
         logger.error(f"Startup failed: {str(e)}")
+        # re-raise to stop startup (so deployment logs show failure)
         raise
 
 
@@ -516,6 +560,8 @@ async def chat(
                     status_code=400,
                     detail="Uploaded image is empty"
                 )
+        except HTTPException:
+            raise
         except Exception as e:
             logger.error(f"Error reading image: {str(e)}")
             raise HTTPException(
@@ -559,9 +605,10 @@ async def chat(
         try:
             response_text = interpret_with_llm(conditions, message.strip() if message else "")
         except HTTPException:
+            # propagate HTTPExceptions from _call_groq_chat (so client sees 502/500)
             raise
         except Exception as e:
-            logger.error(f"LLM interpretation failed: {str(e)}")
+            logger.exception(f"LLM interpretation failed: {str(e)}")
             raise HTTPException(
                 status_code=500,
                 detail="Failed to generate interpretation"
@@ -576,7 +623,7 @@ async def chat(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Chat endpoint error: {str(e)}")
+        logger.exception(f"Chat endpoint error: {str(e)}")
         raise HTTPException(
             status_code=500,
             detail="An error occurred processing your request"
