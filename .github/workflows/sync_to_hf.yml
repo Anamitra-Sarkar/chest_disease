@@ -2,8 +2,7 @@ name: Sync to Hugging Face Space
 
 on:
   push:
-    branches:
-      - main
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -17,47 +16,38 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          lfs: true
-
-      - name: Setup Git LFS
-        run: |
-          git lfs install
 
       - name: Configure Git
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "GitHub Actions Bot"
 
-      - name: Push to Hugging Face Space
+      - name: Push clean snapshot to Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           set -e
 
           if [ -z "$HF_TOKEN" ]; then
-            echo "❌ HF_TOKEN is not set in GitHub Secrets"
+            echo "❌ HF_TOKEN is not set"
             exit 1
           fi
 
-          # Authenticate with Hugging Face
-          git config --global credential.helper store
-          echo "https://user:${HF_TOKEN}@huggingface.co" > ~/.git-credentials
+          echo "🚀 Creating clean snapshot (no history)..."
 
-          # Add HF remote if missing
-          if ! git remote get-url huggingface >/dev/null 2>&1; then
-            git remote add huggingface https://huggingface.co/spaces/Arko007/chest-disease
-          fi
+          # Create orphan branch (NO history)
+          git checkout --orphan hf-clean
 
-          echo "🚀 Syncing GitHub → Hugging Face Space..."
+          # Remove any leftover tracked files
+          git rm -rf . || true
 
-          # IMPORTANT:
-          # HF Spaces usually track `master`, NOT `main`
-          # Push current commit to HF master branch
-          git push huggingface HEAD:master
+          # Re-add current working tree
+          git checkout main -- .
 
-          echo "✅ Hugging Face Space updated successfully"
+          git add .
+          git commit -m "Clean deploy snapshot"
 
-      - name: Cleanup credentials
-        if: always()
-        run: |
-          rm -f ~/.git-credentials
+          # Push snapshot forcefully to HF Space
+          git push https://user:${HF_TOKEN}@huggingface.co/spaces/Arko007/chest-disease hf-clean:master --force
+
+          echo "✅ Hugging Face Space updated (clean history)"
