@@ -14,40 +14,27 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Configure Git
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "GitHub Actions Bot"
 
-      - name: Push clean snapshot to Hugging Face Space
+      - name: Push clean snapshot to Hugging Face Space (MAIN branch)
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           set -e
 
-          if [ -z "$HF_TOKEN" ]; then
-            echo "❌ HF_TOKEN is not set"
-            exit 1
-          fi
+          echo "🚀 Creating clean deploy snapshot"
 
-          echo "🚀 Creating clean snapshot (no history)..."
-
-          # Create orphan branch (NO history)
           git checkout --orphan hf-clean
-
-          # Remove any leftover tracked files
           git rm -rf . || true
-
-          # Re-add current working tree
           git checkout main -- .
 
           git add .
-          git commit -m "Clean deploy snapshot"
+          git commit -m "Clean deploy to HF Space"
 
-          # Push snapshot forcefully to HF Space
-          git push https://user:${HF_TOKEN}@huggingface.co/spaces/Arko007/chest-disease hf-clean:master --force
+          git push https://user:${HF_TOKEN}@huggingface.co/spaces/Arko007/chest-disease hf-clean:main --force
 
-          echo "✅ Hugging Face Space updated (clean history)"
+          echo "✅ Deployed to HF Space main branch"
