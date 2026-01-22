@@ -145,7 +145,7 @@ def load_model() -> CheXpertCNN:
         model = CheXpertCNN(num_classes=14)
 
         # Load state dict
-        checkpoint = torch.load(MODEL_PATH, map_location=INFERENCE_DEVICE)
+        checkpoint = torch.load(MODEL_PATH, map_location=INFERENCE_DEVICE, weights_only=False)
         
         # Extract model state dict from checkpoint if it's a full training checkpoint
         state_dict = None
