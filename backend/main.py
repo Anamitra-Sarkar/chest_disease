@@ -435,8 +435,7 @@ async def startup_event():
         raise
 
 
-@app.get("/health")
-@app.head("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 async def health_check():
     """Health check endpoint."""
     return {
