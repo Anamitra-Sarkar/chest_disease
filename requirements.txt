@@ -1,11 +1,14 @@
-fastapi==0.115.0
-uvicorn[standard]==0.32.1
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
 python-multipart==0.0.6
 pydantic==2.5.2
 python-dotenv==1.0.0
-torch==2.6.0
-torchvision==0.21.0
-Pillow==11.0.0
+torch==2.1.1
+torchvision==0.16.1
+Pillow==10.1.0
 numpy==1.26.2
-groq==0.11.0
-huggingface-hub==0.20.0
+# Upgrade groq to fixed versions to avoid proxies-related Client init errors
+groq>=0.11.0
+# Ensure httpx/httpcore are recent enough for the Groq SDK internals
+httpx>=0.23.3
+httpcore>=0.23.3
